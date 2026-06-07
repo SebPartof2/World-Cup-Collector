@@ -205,7 +205,11 @@ async function handleApi(request, env, path) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const path = url.pathname;
+    // Normalise: drop any trailing slash and lower-case so routes are tolerant
+    // of "/mass/", "/Mass", etc. (card codes live in the request body, not the
+    // path, so lower-casing here is safe).
+    let path = url.pathname.replace(/\/+$/, "") || "/";
+    path = path.toLowerCase();
 
     if (path.startsWith("/api/")) {
       try {
@@ -215,17 +219,11 @@ export default {
       }
     }
 
-    if (path === "/" || path === "") {
-      return new Response(renderPage({ specialSets: SPECIAL_SETS }), {
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
-    }
+    const html = (body) =>
+      new Response(body, { headers: { "content-type": "text/html; charset=utf-8" } });
 
-    if (path === "/mass") {
-      return new Response(renderMassPage(), {
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
-    }
+    if (path === "/") return html(renderPage({ specialSets: SPECIAL_SETS }));
+    if (path === "/mass") return html(renderMassPage());
 
     return new Response("Not found", { status: 404 });
   },
