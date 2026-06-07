@@ -23,6 +23,9 @@ single-page UI; D1 stores one collection.
   input for the next code, with a running new/dupe/invalid tally.
 - **Duplicate / swap tracking** — checking in a card you already own bumps its
   count so you know what you can trade.
+- **Duplicates list** — a dedicated swaps panel lists every card you own more
+  than one of (with spare counts); click a chip to remove a spare after a trade.
+  Also exposed as `GET /api/duplicates`.
 - **Stats dashboard** — total collected, % complete, missing, duplicates,
   countries finished, sets finished, plus per-set progress.
 - **One collection**, stored in D1.
@@ -68,6 +71,7 @@ npm run deploy
 | GET    | `/mass`        | —                                     | Full-screen mass check-in screen     |
 | GET    | `/api/cards`   | —                                     | Full catalog with owned counts       |
 | GET    | `/api/stats`   | —                                     | Aggregate + per-set stats            |
+| GET    | `/api/duplicates` | —                                  | Cards owned >1, with spare counts    |
 | POST   | `/api/checkin` | `{ "code": "USA1", "delta": 1 }`      | Check in (`delta: -1` to remove one) |
 | POST   | `/api/reset`   | —                                     | Clear the whole collection           |
 

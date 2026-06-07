@@ -67,6 +67,18 @@ export function renderPage() {
   .gname { font-weight: 700; }
   .gpct { color: var(--accent); font-weight: 700; font-size: 13px; }
   .gmeta { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  .dupe-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .dupe-wrap .hd { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px; }
+  .dupe-wrap .hd .t { font-weight: 700; }
+  .dupe-wrap .hd .s { color: var(--muted); font-size: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px;
+    background: #2a2410; border: 1px solid #5a4a12; color: var(--gold); cursor: pointer; font-size: 14px; }
+  .chip:hover { background: #3a3214; }
+  .chip .x { background: var(--gold); color: #3a2c00; font-weight: 700; border-radius: 999px;
+    padding: 0 7px; font-size: 12px; }
+  .chip .fl { font-size: 15px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px,1fr));
     gap: 8px; padding: 0 14px 14px; }
   .grid.hidden { display: none; }
@@ -102,6 +114,8 @@ export function renderPage() {
   <div class="stats" id="stats"></div>
 
   <div id="groups"></div>
+
+  <div id="dupes"></div>
 
   <div class="controls">
     <label><input type="checkbox" id="onlyMissing" /> Show only missing</label>
@@ -166,6 +180,30 @@ function stat(n, label, pct) {
 async function loadCards() {
   CATALOG = await api("/api/cards");
   renderSets();
+  renderDupes();
+}
+
+// The swaps list: every card owned more than once, derived from the catalog
+// we already loaded so it stays in sync with the grid.
+function renderDupes() {
+  const wrap = $("#dupes");
+  const dupes = [];
+  for (const set of CATALOG.sets || []) {
+    for (const c of set.cards) {
+      if (c.count > 1) dupes.push({ ...c, emoji: set.emoji });
+    }
+  }
+  if (!dupes.length) { wrap.innerHTML = ""; return; }
+  const totalSpares = dupes.reduce((n, d) => n + (d.count - 1), 0);
+  const chips = dupes.map((d) =>
+    '<span class="chip" data-id="'+d.id+'" title="Click to remove a spare ('+esc(d.name)+')">' +
+      '<span class="fl">'+(d.emoji||"🃏")+'</span>'+d.id+'<span class="x">×'+(d.count-1)+'</span></span>'
+  ).join("");
+  wrap.innerHTML =
+    '<div class="dupe-wrap"><div class="hd">' +
+      '<span class="t">🔁 Duplicates / swaps</span>' +
+      '<span class="s">'+totalSpares+' spare'+(totalSpares===1?"":"s")+' across '+dupes.length+' card'+(dupes.length===1?"":"s")+' · click a chip to remove one</span>' +
+    '</div><div class="chips">'+chips+'</div></div>';
 }
 
 function renderSets() {
@@ -255,6 +293,12 @@ $("#sets").addEventListener("click", (e) => {
 $("#sets").addEventListener("contextmenu", (e) => {
   const c = e.target.closest(".cell");
   if (c) { e.preventDefault(); checkin(c.dataset.id, -1); }
+});
+
+// Click a duplicate chip to remove one spare (e.g. after a swap).
+$("#dupes").addEventListener("click", (e) => {
+  const chip = e.target.closest(".chip");
+  if (chip) checkin(chip.dataset.id, -1);
 });
 
 $("#onlyMissing").addEventListener("change", renderSets);

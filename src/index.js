@@ -133,6 +133,32 @@ async function handleApi(request, env, path) {
     return json(computeStats(catalog, owned));
   }
 
+  // GET /api/duplicates — every card owned more than once, with spares to swap.
+  if (path === "/api/duplicates" && request.method === "GET") {
+    const owned = await loadOwned(db);
+    const cards = [];
+    let totalSpares = 0;
+    for (const set of catalog) {
+      for (const card of set.cards) {
+        const count = owned.get(card.id) || 0;
+        if (count > 1) {
+          const spares = count - 1;
+          totalSpares += spares;
+          cards.push({
+            card_id: card.id,
+            code: set.code,
+            name: set.name,
+            emoji: set.emoji,
+            number: card.number,
+            count,
+            spares,
+          });
+        }
+      }
+    }
+    return json({ totalSpares, distinct: cards.length, cards });
+  }
+
   // POST /api/checkin  { code: "USA1", delta?: 1 }
   // Quick check-in: increments (or decrements with delta:-1) the owned count.
   if (path === "/api/checkin" && request.method === "POST") {
