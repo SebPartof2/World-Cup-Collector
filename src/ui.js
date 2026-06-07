@@ -204,7 +204,7 @@ const setBlock = (onlyMissing) => (set) => {
       '<div class="set-head" data-toggle>' +
         '<span class="emoji">'+(set.emoji||"🃏")+'</span>' +
         '<span class="name">'+esc(set.name)+'</span>' +
-        (set.group ? '<span class="pill grp">Grp '+esc(set.group)+'</span>' : '') +
+        (set.group ? '<span class="pill grp">Grp '+esc(set.group)+(set.draw!=null?"."+set.draw:"")+'</span>' : '') +
         '<span class="pill">'+set.code+'</span>' +
         '<span class="'+(done?"done":"count")+'">'+have+' / '+set.total+(done?" ✓":"")+'</span>' +
       '</div>' +

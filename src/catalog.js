@@ -41,19 +41,27 @@ export function buildCatalog() {
     const code = String(c.code).toUpperCase();
     const emoji = toEmoji(c.unicode);
     const group = c.group != null && String(c.group).trim() !== "" ? String(c.group).trim() : null;
+    const draw = c.draw != null && c.draw !== "" && Number.isFinite(Number(c.draw)) ? Number(c.draw) : null;
     const cards = [];
     for (let n = 1; n <= STICKERS_PER_COUNTRY; n++) {
       cards.push({ id: `${code}${n}`, set: code, number: n, name: `${c.name} #${n}` });
     }
-    countrySets.push({ code, name: c.name, emoji, group, kind: "country", total: cards.length, cards });
+    countrySets.push({ code, name: c.name, emoji, group, draw, kind: "country", total: cards.length, cards });
   }
 
-  // Sort countries by group, then alphabetically by name. Ungrouped go last.
+  // Sort countries by group, then by draw position, then alphabetically by name.
+  // Ungrouped countries and those without a draw position sort last.
   countrySets.sort((a, b) => {
     if (a.group !== b.group) {
       if (a.group == null) return 1;
       if (b.group == null) return -1;
-      return a.group.localeCompare(b.group, undefined, { numeric: true, sensitivity: "base" });
+      const g = a.group.localeCompare(b.group, undefined, { numeric: true, sensitivity: "base" });
+      if (g) return g;
+    }
+    if (a.draw !== b.draw) {
+      if (a.draw == null) return 1;
+      if (b.draw == null) return -1;
+      return a.draw - b.draw;
     }
     return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
   });
@@ -65,7 +73,7 @@ export function buildCatalog() {
     for (let n = 1; n <= s.count; n++) {
       cards.push({ id: `${code}${n}`, set: code, number: n, name: `${s.name} #${n}` });
     }
-    sets.push({ code, name: s.name, emoji: s.emoji, group: null, kind: "special", total: cards.length, cards });
+    sets.push({ code, name: s.name, emoji: s.emoji, group: null, draw: null, kind: "special", total: cards.length, cards });
   }
 
   return sets;

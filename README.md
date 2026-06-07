@@ -8,8 +8,9 @@ single-page UI; D1 stores one collection.
 
 - **Card catalog** built from `data/countries.json` — every country gets **20**
   numbered stickers (`USA1`…`USA20`).
-- **Groups** — give a country a `group` (e.g. `"A"`); teams are sorted by group
-  then alphabetically, and stats roll up to a per-group level.
+- **Groups & draw positions** — give a country a `group` (e.g. `"A"`) and a
+  `draw` position (e.g. `1`–`4`); teams are sorted by group, then draw position,
+  then name, and stats roll up to a per-group level.
 - **Special sets** built in:
   - `FWC` — FIFA World Cup Stickers (19 cards, `FWC1`…`FWC19`)
   - `CC` — Coca-Cola (12 cards, `CC1`…`CC12`)
@@ -28,7 +29,7 @@ formats are documented in [`data/README.md`](data/README.md):
 
 ```json
 [
-  { "name": "United States", "code": "USA", "unicode": "U+1F1FA U+1F1F8", "group": "A" }
+  { "name": "United States", "code": "USA", "unicode": "U+1F1FA U+1F1F8", "group": "A", "draw": 1 }
 ]
 ```
 

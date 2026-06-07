@@ -119,6 +119,7 @@ async function handleApi(request, env, path) {
       name: set.name,
       emoji: set.emoji,
       group: set.group,
+      draw: set.draw,
       kind: set.kind,
       total: set.total,
       cards: set.cards.map((c) => ({ ...c, count: owned.get(c.id) || 0 })),
