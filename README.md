@@ -12,7 +12,7 @@ single-page UI; D1 stores one collection.
   `draw` position (e.g. `1`–`4`); teams are sorted by group, then draw position,
   then name, and stats roll up to a per-group level.
 - **Special sets** built in:
-  - `FWC` — FIFA World Cup Stickers (19 cards, `FWC1`…`FWC19`)
+  - `FWC` — FIFA World Cup Stickers (20 cards, `FWC0`…`FWC19`)
   - `CC` — Coca-Cola (12 cards, `CC1`…`CC12`)
 - **Quick check-in** — just type a code like `USA1`, `FWC12`, or `CC3` and hit
   enter. Case-insensitive, validated against the catalog.

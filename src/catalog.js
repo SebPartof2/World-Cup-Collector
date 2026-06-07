@@ -6,9 +6,10 @@ import countries from "../data/countries.json";
 // Each country gets this many numbered stickers.
 export const STICKERS_PER_COUNTRY = 20;
 
-// Special sets, each generated as <CODE>1..<CODE>count.
+// Special sets. `count` is how many stickers; `start` is the first number
+// (defaults to 1). FWC runs 0..19, CC runs 1..12.
 export const SPECIAL_SETS = [
-  { code: "FWC", name: "FIFA World Cup Stickers", count: 19, emoji: "🏆" },
+  { code: "FWC", name: "FIFA World Cup Stickers", count: 20, start: 0, emoji: "🏆" },
   { code: "CC", name: "Coca-Cola", count: 12, emoji: "🥤" },
 ];
 
@@ -69,8 +70,9 @@ export function buildCatalog() {
 
   for (const s of SPECIAL_SETS) {
     const code = s.code.toUpperCase();
+    const start = s.start ?? 1;
     const cards = [];
-    for (let n = 1; n <= s.count; n++) {
+    for (let n = start; n < start + s.count; n++) {
       cards.push({ id: `${code}${n}`, set: code, number: n, name: `${s.name} #${n}` });
     }
     sets.push({ code, name: s.name, emoji: s.emoji, group: null, draw: null, kind: "special", total: cards.length, cards });

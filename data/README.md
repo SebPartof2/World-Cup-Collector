@@ -21,5 +21,5 @@ Each country automatically gets **20** numbered stickers (`CODE1`..`CODE20`).
 
 The two special sets are generated in code (see `src/catalog.js`):
 
-- **FWC** — FIFA World Cup stickers, `FWC1`..`FWC19` (19 cards)
+- **FWC** — FIFA World Cup stickers, `FWC0`..`FWC19` (20 cards)
 - **CC** — Coca-Cola, `CC1`..`CC12` (12 cards)
