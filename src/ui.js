@@ -90,6 +90,7 @@ export function renderPage() {
 <header>
   <h1>🌍 World Cup <span>Collector</span></h1>
   <div class="sub">Type a code to check in — e.g. <strong>USA1</strong>, <strong>FWC12</strong>, <strong>CC3</strong></div>
+  <div class="sub"><a href="/mass">⚡ Mass check-in mode →</a></div>
 </header>
 <main>
   <form class="checkin" id="checkin">
@@ -267,6 +268,189 @@ $("#reset").addEventListener("click", async () => {
 
 loadStats();
 loadCards();
+</script>
+</body>
+</html>`;
+}
+
+// Full-screen "mass check-in" screen: type a code big, get a full-screen
+// colour-coded response (new / duplicate / invalid). Built for rapid entry.
+export function renderMassPage() {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mass Check-in · World Cup Collector</title>
+<style>
+  :root {
+    --bg:#0b1020; --panel2:#1b2540; --line:#263255; --text:#e8ecf6; --muted:#97a3c2;
+    --new:#16a34a; --new2:#22c55e; --dupe:#d97706; --dupe2:#f59e0b; --bad:#dc2626; --bad2:#ef4444;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font: 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background: var(--bg); color: var(--text); overflow: hidden; }
+  .top { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between;
+    align-items: center; padding: 12px 18px; z-index: 5; }
+  .top a { color: var(--muted); text-decoration: none; font-size: 14px; }
+  .top a:hover { color: var(--text); }
+  .tally { display: flex; gap: 14px; font-size: 13px; }
+  .tally b { font-size: 16px; }
+  .t-new b { color: var(--new2); } .t-dupe b { color: var(--dupe2); } .t-bad b { color: var(--bad2); }
+
+  .stage { height: 100%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 20px; }
+  .prompt { text-align: center; width: 100%; max-width: 760px; }
+  .prompt .hint { color: var(--muted); margin-bottom: 18px; font-size: 15px; }
+  #code { width: 100%; text-align: center; text-transform: uppercase; letter-spacing: 6px;
+    font-size: clamp(48px, 14vw, 130px); font-weight: 800; padding: 10px 16px;
+    border: 0; border-bottom: 4px solid var(--line); background: transparent; color: var(--text); }
+  #code:focus { outline: none; border-bottom-color: var(--new2); }
+  #code::placeholder { color: #33406b; }
+
+  /* Full-screen colour response */
+  .result { position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column;
+    align-items: center; justify-content: center; padding: 24px; text-align: center;
+    animation: pop .18s ease-out; }
+  .result.show { display: flex; }
+  .result.new { background: linear-gradient(160deg, var(--new), var(--new2)); }
+  .result.dupe { background: linear-gradient(160deg, var(--dupe), var(--dupe2)); }
+  .result.bad { background: linear-gradient(160deg, var(--bad), var(--bad2)); }
+  @keyframes pop { from { transform: scale(.97); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+  .verdict { font-size: clamp(40px, 11vw, 110px); font-weight: 900; letter-spacing: 2px;
+    text-transform: uppercase; line-height: 1; }
+  .bigcode { font-size: clamp(28px, 7vw, 64px); font-weight: 800; margin-top: 8px; letter-spacing: 4px; }
+  .detail { font-size: clamp(18px, 3.4vw, 28px); margin-top: 10px; opacity: .95; }
+  .countbig { font-size: clamp(70px, 20vw, 180px); font-weight: 900; line-height: 1; margin: 6px 0; }
+  .emoji { font-size: clamp(40px, 9vw, 80px); }
+  .closehint { position: fixed; bottom: 18px; font-size: 14px; opacity: .85; }
+
+  /* Country matrix shown on a NEW card */
+  .matrix { display: grid; gap: 7px; margin-top: 18px;
+    grid-template-columns: repeat(10, minmax(0,1fr)); width: min(92vw, 560px); }
+  .mcell { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: clamp(11px, 2.4vw, 16px); background: rgba(0,0,0,.18); color: rgba(255,255,255,.55);
+    border: 1px solid rgba(255,255,255,.18); }
+  .mcell.have { background: rgba(255,255,255,.92); color: #064e2b; }
+  .mcell.now { outline: 4px solid #fff; transform: scale(1.12); box-shadow: 0 0 0 4px rgba(0,0,0,.25);
+    animation: glow 1s ease-in-out infinite alternate; }
+  @keyframes glow { from { box-shadow: 0 0 6px 2px rgba(255,255,255,.5);} to { box-shadow: 0 0 22px 8px rgba(255,255,255,.95);} }
+</style>
+</head>
+<body>
+<div class="top">
+  <a href="/">← Collector</a>
+  <div class="tally">
+    <span class="t-new">New <b id="cNew">0</b></span>
+    <span class="t-dupe">Dupes <b id="cDupe">0</b></span>
+    <span class="t-bad">Invalid <b id="cBad">0</b></span>
+  </div>
+</div>
+
+<div class="stage">
+  <form class="prompt" id="form">
+    <div class="hint">Scan-style mass check-in — type a code and hit <strong>Enter</strong></div>
+    <input id="code" placeholder="USA1" autocomplete="off" autocapitalize="characters"
+      autocorrect="off" spellcheck="false" inputmode="text" autofocus />
+  </form>
+</div>
+
+<div class="result" id="result">
+  <div id="rbody"></div>
+  <div class="closehint">Press any key or tap to continue</div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const input = $("#code");
+const result = $("#result");
+const counts = { new: 0, dupe: 0, bad: 0 };
+let open = false;
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[m]));
+
+function matrix(set, nowId) {
+  const cells = set.cards.map((c) =>
+    '<div class="mcell '+(c.count>0?"have ":"")+(c.id===nowId?"now":"")+'">'+c.number+'</div>'
+  ).join("");
+  return '<div class="emoji">'+(set.emoji||"🃏")+'</div>' +
+    '<div class="detail" style="margin-top:4px"><strong>'+esc(set.name)+'</strong> · '+
+      set.collected+' / '+set.total+' collected</div>' +
+    '<div class="matrix" style="grid-template-columns:repeat('+Math.min(10,set.total)+',minmax(0,1fr))">'+cells+'</div>';
+}
+
+function show(kind, html) {
+  result.className = "result show " + kind;
+  $("#rbody").innerHTML = html;
+  open = true;
+  counts[kind === "new" ? "new" : kind === "dupe" ? "dupe" : "bad"]++;
+  $("#cNew").textContent = counts.new;
+  $("#cDupe").textContent = counts.dupe;
+  $("#cBad").textContent = counts.bad;
+}
+
+function dismiss(seed) {
+  if (!open) return;
+  open = false;
+  result.className = "result";
+  input.value = seed && seed.length === 1 ? seed : "";
+  input.focus();
+}
+
+async function checkin(code) {
+  let res;
+  try {
+    res = await (await fetch("/api/checkin", {
+      method: "POST", headers: {"content-type":"application/json"},
+      body: JSON.stringify({ code }),
+    })).json();
+  } catch (e) { res = { error: "Network error" }; }
+
+  if (res.error) {
+    show("bad",
+      '<div class="verdict">Invalid</div>' +
+      '<div class="bigcode">'+esc(code.toUpperCase())+'</div>' +
+      '<div class="detail">Not a real sticker code</div>');
+    return;
+  }
+  if (res.isNew && res.set) {
+    show("new",
+      '<div class="verdict">New!</div>' +
+      '<div class="bigcode">'+esc(res.card_id)+'</div>' +
+      matrix(res.set, res.card_id));
+  } else if (res.isNew) {
+    show("new",
+      '<div class="verdict">New!</div><div class="bigcode">'+esc(res.card_id)+'</div>');
+  } else {
+    show("dupe",
+      '<div class="verdict">Duplicate</div>' +
+      '<div class="bigcode">'+esc(res.card_id)+'</div>' +
+      '<div class="countbig">×'+res.count+'</div>' +
+      '<div class="detail">You have '+res.count+' of this card ('+(res.count-1)+' spare'+(res.count-1===1?"":"s")+')</div>');
+  }
+}
+
+$("#form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const code = input.value.trim();
+  if (!code) return;
+  input.value = "";
+  checkin(code);
+});
+
+// While a result is shown, any key / tap returns to the input for the next code.
+document.addEventListener("keydown", (e) => {
+  if (!open) return;
+  e.preventDefault();
+  const printable = e.key.length === 1 && !e.ctrlKey && !e.metaKey ? e.key : "";
+  dismiss(printable);
+});
+result.addEventListener("click", () => dismiss());
+
+// Keep focus on the input at all times so typing always works.
+document.addEventListener("click", () => { if (!open) input.focus(); });
+input.focus();
 </script>
 </body>
 </html>`;

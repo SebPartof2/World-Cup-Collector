@@ -1,5 +1,5 @@
 import { buildCatalog, normalizeCode, SPECIAL_SETS } from "./catalog.js";
-import { renderPage } from "./ui.js";
+import { renderPage, renderMassPage } from "./ui.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -161,7 +161,36 @@ async function handleApi(request, env, path) {
 
     const row = await db.prepare("SELECT count FROM stickers WHERE card_id = ?1").bind(id).first();
     const count = row ? row.count : 0;
-    return json({ ok: true, card_id: id, count, isNew: delta === 1 && count === 1 });
+
+    // Include the full set ("matrix") the card belongs to, with owned counts,
+    // so the mass check-in screen can render it in one round trip.
+    const set = catalog.find((s) => s.cards.some((c) => c.id === id));
+    let setSnapshot = null;
+    if (set) {
+      const owned = await loadOwned(db);
+      const collected = set.cards.filter((c) => (owned.get(c.id) || 0) > 0).length;
+      setSnapshot = {
+        code: set.code,
+        name: set.name,
+        emoji: set.emoji,
+        group: set.group,
+        draw: set.draw,
+        kind: set.kind,
+        total: set.total,
+        collected,
+        cards: set.cards.map((c) => ({ id: c.id, number: c.number, count: owned.get(c.id) || 0 })),
+      };
+    }
+
+    return json({
+      ok: true,
+      card_id: id,
+      number: set ? set.cards.find((c) => c.id === id).number : null,
+      count,
+      isNew: delta === 1 && count === 1,
+      isDuplicate: delta === 1 && count > 1,
+      set: setSnapshot,
+    });
   }
 
   // POST /api/reset — clears the whole collection.
@@ -188,6 +217,12 @@ export default {
 
     if (path === "/" || path === "") {
       return new Response(renderPage({ specialSets: SPECIAL_SETS }), {
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
+    }
+
+    if (path === "/mass") {
+      return new Response(renderMassPage(), {
         headers: { "content-type": "text/html; charset=utf-8" },
       });
     }

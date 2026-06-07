@@ -16,6 +16,11 @@ single-page UI; D1 stores one collection.
   - `CC` — Coca-Cola (12 cards, `CC1`…`CC12`)
 - **Quick check-in** — just type a code like `USA1`, `FWC12`, or `CC3` and hit
   enter. Case-insensitive, validated against the catalog.
+- **Mass check-in mode** (`/mass`) — a full-screen, scan-style entry screen. Type
+  a code big, hit enter, and the whole screen flashes a colour-coded verdict:
+  **green “New!”** (shows that country’s sticker matrix), **amber “Duplicate”**
+  (shows how many you have), or **red “Invalid”**. Any key/tap returns you to the
+  input for the next code, with a running new/dupe/invalid tally.
 - **Duplicate / swap tracking** — checking in a card you already own bumps its
   count so you know what you can trade.
 - **Stats dashboard** — total collected, % complete, missing, duplicates,
@@ -60,6 +65,7 @@ npm run deploy
 | Method | Path           | Body                                  | Description                          |
 | ------ | -------------- | ------------------------------------- | ------------------------------------ |
 | GET    | `/`            | —                                     | The collector UI                     |
+| GET    | `/mass`        | —                                     | Full-screen mass check-in screen     |
 | GET    | `/api/cards`   | —                                     | Full catalog with owned counts       |
 | GET    | `/api/stats`   | —                                     | Aggregate + per-set stats            |
 | POST   | `/api/checkin` | `{ "code": "USA1", "delta": 1 }`      | Check in (`delta: -1` to remove one) |
