@@ -1,1 +1,61 @@
-[]
+[
+  { "name": "Mexico", "code": "MEX", "unicode": "U+1F1F2 U+1F1FD", "group": "A" },
+  { "name": "South Africa", "code": "RSA", "unicode": "U+1F1FF U+1F1E6", "group": "A" },
+  { "name": "South Korea", "code": "KOR", "unicode": "U+1F1F0 U+1F1F7", "group": "A" },
+  { "name": "Czech Republic", "code": "CZE", "unicode": "U+1F1E8 U+1F1FF", "group": "A" },
+
+  { "name": "Canada", "code": "CAN", "unicode": "U+1F1E8 U+1F1E6", "group": "B" },
+  { "name": "Bosnia and Herzegovina", "code": "BIH", "unicode": "U+1F1E7 U+1F1E6", "group": "B" },
+  { "name": "Qatar", "code": "QAT", "unicode": "U+1F1F6 U+1F1E6", "group": "B" },
+  { "name": "Switzerland", "code": "SUI", "unicode": "U+1F1E8 U+1F1ED", "group": "B" },
+
+  { "name": "Brazil", "code": "BRA", "unicode": "U+1F1E7 U+1F1F7", "group": "C" },
+  { "name": "Morocco", "code": "MAR", "unicode": "U+1F1F2 U+1F1E6", "group": "C" },
+  { "name": "Haiti", "code": "HAI", "unicode": "U+1F1ED U+1F1F9", "group": "C" },
+  { "name": "Scotland", "code": "SCO", "unicode": "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "group": "C" },
+
+  { "name": "United States", "code": "USA", "unicode": "U+1F1FA U+1F1F8", "group": "D" },
+  { "name": "Paraguay", "code": "PAR", "unicode": "U+1F1F5 U+1F1FE", "group": "D" },
+  { "name": "Australia", "code": "AUS", "unicode": "U+1F1E6 U+1F1FA", "group": "D" },
+  { "name": "Türkiye", "code": "TUR", "unicode": "U+1F1F9 U+1F1F7", "group": "D" },
+
+  { "name": "Germany", "code": "GER", "unicode": "U+1F1E9 U+1F1EA", "group": "E" },
+  { "name": "Curaçao", "code": "CUW", "unicode": "U+1F1E8 U+1F1FC", "group": "E" },
+  { "name": "Côte d'Ivoire", "code": "CIV", "unicode": "U+1F1E8 U+1F1EE", "group": "E" },
+  { "name": "Ecuador", "code": "ECU", "unicode": "U+1F1EA U+1F1E8", "group": "E" },
+
+  { "name": "Netherlands", "code": "NED", "unicode": "U+1F1F3 U+1F1F1", "group": "F" },
+  { "name": "Japan", "code": "JPN", "unicode": "U+1F1EF U+1F1F5", "group": "F" },
+  { "name": "Sweden", "code": "SWE", "unicode": "U+1F1F8 U+1F1EA", "group": "F" },
+  { "name": "Tunisia", "code": "TUN", "unicode": "U+1F1F9 U+1F1F3", "group": "F" },
+
+  { "name": "Belgium", "code": "BEL", "unicode": "U+1F1E7 U+1F1EA", "group": "G" },
+  { "name": "Egypt", "code": "EGY", "unicode": "U+1F1EA U+1F1EC", "group": "G" },
+  { "name": "Iran", "code": "IRN", "unicode": "U+1F1EE U+1F1F7", "group": "G" },
+  { "name": "New Zealand", "code": "NZL", "unicode": "U+1F1F3 U+1F1FF", "group": "G" },
+
+  { "name": "Spain", "code": "ESP", "unicode": "U+1F1EA U+1F1F8", "group": "H" },
+  { "name": "Cabo Verde", "code": "CPV", "unicode": "U+1F1E8 U+1F1FB", "group": "H" },
+  { "name": "Saudi Arabia", "code": "KSA", "unicode": "U+1F1F8 U+1F1E6", "group": "H" },
+  { "name": "Uruguay", "code": "URU", "unicode": "U+1F1FA U+1F1FE", "group": "H" },
+
+  { "name": "France", "code": "FRA", "unicode": "U+1F1EB U+1F1F7", "group": "I" },
+  { "name": "Senegal", "code": "SEN", "unicode": "U+1F1F8 U+1F1F3", "group": "I" },
+  { "name": "Iraq", "code": "IRQ", "unicode": "U+1F1EE U+1F1F6", "group": "I" },
+  { "name": "Norway", "code": "NOR", "unicode": "U+1F1F3 U+1F1F4", "group": "I" },
+
+  { "name": "Argentina", "code": "ARG", "unicode": "U+1F1E6 U+1F1F7", "group": "J" },
+  { "name": "Algeria", "code": "ALG", "unicode": "U+1F1E9 U+1F1FF", "group": "J" },
+  { "name": "Austria", "code": "AUT", "unicode": "U+1F1E6 U+1F1F9", "group": "J" },
+  { "name": "Jordan", "code": "JOR", "unicode": "U+1F1EF U+1F1F4", "group": "J" },
+
+  { "name": "Portugal", "code": "POR", "unicode": "U+1F1F5 U+1F1F9", "group": "K" },
+  { "name": "DR Congo", "code": "COD", "unicode": "U+1F1E8 U+1F1E9", "group": "K" },
+  { "name": "Uzbekistan", "code": "UZB", "unicode": "U+1F1FA U+1F1FF", "group": "K" },
+  { "name": "Colombia", "code": "COL", "unicode": "U+1F1E8 U+1F1F4", "group": "K" },
+
+  { "name": "England", "code": "ENG", "unicode": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "group": "L" },
+  { "name": "Croatia", "code": "CRO", "unicode": "U+1F1ED U+1F1F7", "group": "L" },
+  { "name": "Ghana", "code": "GHA", "unicode": "U+1F1EC U+1F1ED", "group": "L" },
+  { "name": "Panama", "code": "PAN", "unicode": "U+1F1F5 U+1F1E6", "group": "L" }
+]

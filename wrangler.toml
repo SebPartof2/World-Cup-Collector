@@ -9,4 +9,4 @@ compatibility_date = "2025-01-01"
 binding = "DB"
 database_name = "world-cup-collector"
 # Run `npm run db:create` and paste the generated database_id below.
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "b401264b-3ced-41b8-9332-3467a9f0566f"
