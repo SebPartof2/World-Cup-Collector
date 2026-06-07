@@ -1,0 +1,17 @@
+{
+  "name": "world-cup-collector",
+  "version": "1.0.0",
+  "description": "Collect World Cup stickers — Cloudflare Worker + D1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create world-cup-collector",
+    "db:init": "wrangler d1 execute world-cup-collector --file=./schema.sql",
+    "db:init:local": "wrangler d1 execute world-cup-collector --local --file=./schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

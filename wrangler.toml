@@ -1,0 +1,12 @@
+name = "world-cup-collector"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# Serve static assets? No — this app is Worker + D1 only (no Pages).
+# The UI is served directly from the Worker.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "world-cup-collector"
+# Run `npm run db:create` and paste the generated database_id below.
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
