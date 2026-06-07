@@ -154,6 +154,10 @@ async function loadStats() {
     stat(s.countriesComplete + " / " + s.countriesTotal, "Countries finished"),
     stat(s.setsComplete + " / " + s.setsTotal, "Sets finished"),
   ];
+  if (s.badges && s.badges.total)
+    cards.push(stat(s.badges.collected + " / " + s.badges.total, "Team badges", s.badges.percent));
+  if (s.pictures && s.pictures.total)
+    cards.push(stat(s.pictures.collected + " / " + s.pictures.total, "Team pictures", s.pictures.percent));
   if (s.groupsTotal) cards.push(stat(s.groupsComplete + " / " + s.groupsTotal, "Groups finished"));
   $("#stats").innerHTML = cards.join("");
   renderGroups(s.groups || []);

@@ -30,7 +30,9 @@ single-page UI; D1 stores one collection.
   than one of (with spare counts); click a chip to remove a spare after a trade.
   Also exposed as `GET /api/duplicates`.
 - **Stats dashboard** — total collected, % complete, missing, duplicates,
-  countries finished, sets finished, plus per-set progress.
+  countries finished, sets finished, plus per-set progress. Also tracks **team
+  badges** (`XXX1`) and **team pictures** (`XXX13`) across countries — count and
+  percentage, excluding the special sets.
 - **One collection**, stored in D1.
 
 ## Card data

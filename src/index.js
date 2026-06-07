@@ -50,6 +50,10 @@ function computeStats(catalog, owned) {
   let totalCards = 0;
   let collected = 0;
   let duplicates = 0;
+  // Special card types within country sets: badge = #1, picture = #13.
+  // Special sets (FWC/CC) are excluded.
+  let badgeTotal = 0, badgeCollected = 0;
+  let pictureTotal = 0, pictureCollected = 0;
   const sets = [];
 
   for (const set of catalog) {
@@ -60,6 +64,10 @@ function computeStats(catalog, owned) {
       if (n > 0) {
         setCollected++;
         setDupes += n - 1;
+      }
+      if (set.kind === "country") {
+        if (card.number === 1) { badgeTotal++; if (n > 0) badgeCollected++; }
+        else if (card.number === 13) { pictureTotal++; if (n > 0) pictureCollected++; }
       }
     }
     totalCards += set.total;
@@ -77,6 +85,10 @@ function computeStats(catalog, owned) {
       complete: setCollected === set.total,
     });
   }
+
+  const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0);
+  const badges = { collected: badgeCollected, total: badgeTotal, percent: pct(badgeCollected, badgeTotal) };
+  const pictures = { collected: pictureCollected, total: pictureTotal, percent: pct(pictureCollected, pictureTotal) };
 
   const countrySets = sets.filter((s) => s.kind === "country");
 
@@ -116,6 +128,8 @@ function computeStats(catalog, owned) {
     countriesTotal: countrySets.length,
     groupsComplete: groups.filter((g) => g.complete).length,
     groupsTotal: groups.length,
+    badges,
+    pictures,
     groups,
     sets,
   };
