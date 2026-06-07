@@ -16,6 +16,9 @@ single-page UI; D1 stores one collection.
   - `CC` — Coca-Cola (12 cards, `CC1`…`CC12`)
 - **Quick check-in** — just type a code like `USA1`, `FWC12`, or `CC3` and hit
   enter. Case-insensitive, validated against the catalog.
+- **Album page numbers** — give each set an album page number right in the
+  collector UI (the 📄 field on every set header). It's stored in D1 and shown
+  big in mass check-in mode so you know which page to flip to.
 - **Mass check-in mode** (`/mass`) — a full-screen, scan-style entry screen. Type
   a code big, hit enter, and the whole screen flashes a colour-coded verdict:
   **green “New!”** (shows that country’s sticker matrix), **amber “Duplicate”**
@@ -73,6 +76,7 @@ npm run deploy
 | GET    | `/api/stats`   | —                                     | Aggregate + per-set stats            |
 | GET    | `/api/duplicates` | —                                  | Cards owned >1, with spare counts    |
 | POST   | `/api/checkin` | `{ "code": "USA1", "delta": 1 }`      | Check in (`delta: -1` to remove one) |
+| POST   | `/api/page`    | `{ "code": "USA", "page": "12" }`     | Set/clear a set's album page number   |
 | POST   | `/api/reset`   | —                                     | Clear the whole collection           |
 
 ## Project layout

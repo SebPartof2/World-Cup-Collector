@@ -54,6 +54,10 @@ export function renderPage() {
   .set-head .name { font-weight: 600; flex: 1; }
   .set-head .count { color: var(--muted); font-size: 13px; }
   .set-head .done { color: var(--accent); font-weight: 700; }
+  .pageedit { font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 3px; }
+  .pageinput { width: 46px; padding: 3px 6px; font-size: 13px; text-align: center;
+    border: 1px solid var(--line); background: var(--panel2); color: var(--text); border-radius: 7px; }
+  .pageinput:focus { outline: 1px solid var(--accent2); }
   .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--panel2);
     color: var(--muted); border: 1px solid var(--line); }
   .pill.grp { color: var(--gold); border-color: #5a4a12; background: #2a2410; }
@@ -245,6 +249,8 @@ const setBlock = (onlyMissing) => (set) => {
         '<span class="name">'+esc(set.name)+'</span>' +
         (set.group ? '<span class="pill grp">Grp '+esc(set.group)+(set.draw!=null?"."+set.draw:"")+'</span>' : '') +
         '<span class="pill">'+set.code+'</span>' +
+        '<span class="pageedit" onclick="event.stopPropagation()" title="Album page for this set (shown in mass mode)">📄 ' +
+          '<input class="pageinput" data-code="'+set.code+'" value="'+esc(set.page||"")+'" placeholder="pg" /></span>' +
         '<span class="'+(done?"done":"count")+'">'+have+' / '+set.total+(done?" ✓":"")+'</span>' +
       '</div>' +
       '<div class="grid">'+grid+'</div>' +
@@ -283,11 +289,33 @@ $("#checkin").addEventListener("submit", async (e) => {
 });
 
 $("#sets").addEventListener("click", (e) => {
+  if (e.target.closest(".pageedit")) return; // editing a page number, not toggling
   const head = e.target.closest("[data-toggle]");
   if (head) { head.nextElementSibling.classList.toggle("hidden"); return; }
   const c = e.target.closest(".cell");
   if (c) checkin(c.dataset.id, 1);
 });
+
+// Save album page numbers as they're edited.
+$("#sets").addEventListener("change", (e) => {
+  const inp = e.target.closest(".pageinput");
+  if (inp) savePage(inp.dataset.code, inp.value);
+});
+$("#sets").addEventListener("keydown", (e) => {
+  const inp = e.target.closest(".pageinput");
+  if (inp && e.key === "Enter") { e.preventDefault(); inp.blur(); }
+});
+
+async function savePage(code, page) {
+  const res = await api("/api/page", {
+    method: "POST", headers: {"content-type":"application/json"},
+    body: JSON.stringify({ code, page }),
+  });
+  if (res.error) { flash(res.error, "err"); return; }
+  flash(code + (res.page ? " → page " + res.page : " page cleared"), "ok");
+  // Refresh catalog so the mass-mode snapshot and chips pick up the new page.
+  CATALOG = await api("/api/cards");
+}
 
 // Right-click / long-press a cell to decrement.
 $("#sets").addEventListener("contextmenu", (e) => {
@@ -365,7 +393,11 @@ export function renderMassPage() {
   .verdict { font-size: clamp(40px, 11vw, 110px); font-weight: 900; letter-spacing: 2px;
     text-transform: uppercase; line-height: 1; }
   .bigcode { font-size: clamp(28px, 7vw, 64px); font-weight: 800; margin-top: 8px; letter-spacing: 4px; }
+  .pagebig { display: inline-block; margin-top: 14px; padding: 8px 22px; border-radius: 14px;
+    background: rgba(0,0,0,.28); font-size: clamp(26px, 6vw, 52px); font-weight: 900; letter-spacing: 1px; }
   .detail { font-size: clamp(18px, 3.4vw, 28px); margin-top: 10px; opacity: .95; }
+  .meta { font-size: clamp(16px, 3vw, 24px); margin-top: 8px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; opacity: .9; }
   .countbig { font-size: clamp(70px, 20vw, 180px); font-weight: 900; line-height: 1; margin: 6px 0; }
   .emoji { font-size: clamp(40px, 9vw, 80px); }
   .closehint { position: fixed; bottom: 18px; font-size: 14px; opacity: .85; }
@@ -424,6 +456,18 @@ function matrix(set, nowId) {
     '<div class="matrix" style="grid-template-columns:repeat('+Math.min(10,set.total)+',minmax(0,1fr))">'+cells+'</div>';
 }
 
+function pageBanner(set) {
+  return set && set.page ? '<div class="pagebig">📄 Page '+esc(set.page)+'</div>' : '';
+}
+
+function metaLine(set) {
+  if (!set) return '';
+  const bits = [];
+  if (set.group) bits.push('Group ' + esc(set.group));
+  if (set.draw != null) bits.push('Seed ' + esc(set.draw));
+  return bits.length ? '<div class="meta">'+bits.join(' · ')+'</div>' : '';
+}
+
 function show(kind, html) {
   result.className = "result show " + kind;
   $("#rbody").innerHTML = html;
@@ -462,14 +506,19 @@ async function checkin(code) {
     show("new",
       '<div class="verdict">New!</div>' +
       '<div class="bigcode">'+esc(res.card_id)+'</div>' +
+      metaLine(res.set) +
+      pageBanner(res.set) +
       matrix(res.set, res.card_id));
   } else if (res.isNew) {
     show("new",
-      '<div class="verdict">New!</div><div class="bigcode">'+esc(res.card_id)+'</div>');
+      '<div class="verdict">New!</div><div class="bigcode">'+esc(res.card_id)+'</div>' +
+      metaLine(res.set) + pageBanner(res.set));
   } else {
     show("dupe",
       '<div class="verdict">Duplicate</div>' +
       '<div class="bigcode">'+esc(res.card_id)+'</div>' +
+      metaLine(res.set) +
+      pageBanner(res.set) +
       '<div class="countbig">×'+res.count+'</div>' +
       '<div class="detail">You have '+res.count+' of this card ('+(res.count-1)+' spare'+(res.count-1===1?"":"s")+')</div>');
   }

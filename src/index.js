@@ -11,15 +11,22 @@ const json = (data, status = 200) =>
 let schemaReady = false;
 async function ensureSchema(db) {
   if (schemaReady) return;
-  await db
-    .prepare(
+  await db.batch([
+    db.prepare(
       `CREATE TABLE IF NOT EXISTS stickers (
          card_id TEXT PRIMARY KEY,
          count INTEGER NOT NULL DEFAULT 0 CHECK (count >= 0),
          updated_at TEXT NOT NULL
        )`
-    )
-    .run();
+    ),
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS pages (
+         set_code TEXT PRIMARY KEY,
+         page TEXT NOT NULL,
+         updated_at TEXT NOT NULL
+       )`
+    ),
+  ]);
   schemaReady = true;
 }
 
@@ -29,6 +36,14 @@ async function loadOwned(db) {
   const owned = new Map();
   for (const r of results) owned.set(r.card_id, r.count);
   return owned;
+}
+
+// Map of set_code -> album page (string).
+async function loadPages(db) {
+  const { results } = await db.prepare("SELECT set_code, page FROM pages").all();
+  const pages = new Map();
+  for (const r of results) pages.set(r.set_code, r.page);
+  return pages;
 }
 
 function computeStats(catalog, owned) {
@@ -113,13 +128,14 @@ async function handleApi(request, env, path) {
 
   // GET /api/cards — full catalog merged with owned counts.
   if (path === "/api/cards" && request.method === "GET") {
-    const owned = await loadOwned(db);
+    const [owned, pages] = await Promise.all([loadOwned(db), loadPages(db)]);
     const sets = catalog.map((set) => ({
       code: set.code,
       name: set.name,
       emoji: set.emoji,
       group: set.group,
       draw: set.draw,
+      page: pages.get(set.code) || null,
       kind: set.kind,
       total: set.total,
       cards: set.cards.map((c) => ({ ...c, count: owned.get(c.id) || 0 })),
@@ -159,6 +175,35 @@ async function handleApi(request, env, path) {
     return json({ totalSpares, distinct: cards.length, cards });
   }
 
+  // POST /api/page  { code: "USA", page: "12" }
+  // Set (or clear, when page is blank) the album page number for a set.
+  if (path === "/api/page" && request.method === "POST") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const code = String(body.code || "").trim().toUpperCase();
+    if (!code || !catalog.some((s) => s.code === code)) {
+      return json({ error: `Unknown set code: ${body.code ?? ""}` }, 404);
+    }
+    const page = String(body.page ?? "").trim();
+    const now = new Date().toISOString();
+    if (!page) {
+      await db.prepare("DELETE FROM pages WHERE set_code = ?1").bind(code).run();
+      return json({ ok: true, code, page: null });
+    }
+    await db
+      .prepare(
+        `INSERT INTO pages (set_code, page, updated_at) VALUES (?1, ?2, ?3)
+         ON CONFLICT(set_code) DO UPDATE SET page = ?2, updated_at = ?3`
+      )
+      .bind(code, page, now)
+      .run();
+    return json({ ok: true, code, page });
+  }
+
   // POST /api/checkin  { code: "USA1", delta?: 1 }
   // Quick check-in: increments (or decrements with delta:-1) the owned count.
   if (path === "/api/checkin" && request.method === "POST") {
@@ -193,7 +238,7 @@ async function handleApi(request, env, path) {
     const set = catalog.find((s) => s.cards.some((c) => c.id === id));
     let setSnapshot = null;
     if (set) {
-      const owned = await loadOwned(db);
+      const [owned, pages] = await Promise.all([loadOwned(db), loadPages(db)]);
       const collected = set.cards.filter((c) => (owned.get(c.id) || 0) > 0).length;
       setSnapshot = {
         code: set.code,
@@ -201,6 +246,7 @@ async function handleApi(request, env, path) {
         emoji: set.emoji,
         group: set.group,
         draw: set.draw,
+        page: pages.get(set.code) || null,
         kind: set.kind,
         total: set.total,
         collected,
