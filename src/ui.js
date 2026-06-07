@@ -56,6 +56,17 @@ export function renderPage() {
   .set-head .done { color: var(--accent); font-weight: 700; }
   .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--panel2);
     color: var(--muted); border: 1px solid var(--line); }
+  .pill.grp { color: var(--gold); border-color: #5a4a12; background: #2a2410; }
+
+  .section { font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); margin: 22px 4px 10px; }
+  .group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; }
+  .gcard { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  .gcard.done { border-color: #2c7a55; }
+  .ghead { display: flex; justify-content: space-between; align-items: baseline; }
+  .gname { font-weight: 700; }
+  .gpct { color: var(--accent); font-weight: 700; font-size: 13px; }
+  .gmeta { color: var(--muted); font-size: 12px; margin-top: 6px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px,1fr));
     gap: 8px; padding: 0 14px 14px; }
   .grid.hidden { display: none; }
@@ -89,6 +100,8 @@ export function renderPage() {
 
   <div class="stats" id="stats"></div>
 
+  <div id="groups"></div>
+
   <div class="controls">
     <label><input type="checkbox" id="onlyMissing" /> Show only missing</label>
     <button class="ghost" id="reset">Reset collection</button>
@@ -114,14 +127,34 @@ function flash(msg, cls) {
 
 async function loadStats() {
   const s = await api("/api/stats");
-  $("#stats").innerHTML = [
+  const cards = [
     stat(s.collected + " / " + s.totalCards, "Stickers collected", s.percent),
     stat(s.percent + "%", "Complete"),
     stat(s.missing, "Missing"),
     stat(s.duplicates, "Duplicates / swaps"),
     stat(s.countriesComplete + " / " + s.countriesTotal, "Countries finished"),
     stat(s.setsComplete + " / " + s.setsTotal, "Sets finished"),
-  ].join("");
+  ];
+  if (s.groupsTotal) cards.push(stat(s.groupsComplete + " / " + s.groupsTotal, "Groups finished"));
+  $("#stats").innerHTML = cards.join("");
+  renderGroups(s.groups || []);
+}
+
+function renderGroups(groups) {
+  const wrap = $("#groups");
+  if (!groups.length) { wrap.innerHTML = ""; return; }
+  wrap.innerHTML =
+    '<h2 class="section">Groups</h2><div class="group-grid">' +
+    groups.map((g) =>
+      '<div class="gcard'+(g.complete?" done":"")+'">' +
+        '<div class="ghead"><span class="gname">Group '+esc(g.group)+'</span>' +
+        '<span class="gpct">'+g.percent+'%'+(g.complete?" ✓":"")+'</span></div>' +
+        '<div class="bar"><i style="width:'+g.percent+'%"></i></div>' +
+        '<div class="gmeta">'+g.collected+' / '+g.total+' stickers · '+
+          g.countriesComplete+'/'+g.countries+' teams done</div>' +
+      '</div>'
+    ).join("") +
+    '</div>';
 }
 
 function stat(n, label, pct) {
@@ -141,7 +174,21 @@ function renderSets() {
     wrap.innerHTML = '<div class="empty">No card data yet.<br>Add teams to <code>data/countries.json</code> and redeploy.<br><br>The <strong>FWC</strong> and <strong>CC</strong> special sets appear once data loads.</div>';
     return;
   }
-  wrap.innerHTML = CATALOG.sets.map(setBlock(onlyMissing)).join("");
+  // Sets arrive pre-sorted by group then name. Insert a divider whenever the
+  // group changes so the grouping is visible.
+  const render = setBlock(onlyMissing);
+  let html = "";
+  let lastGroup = "__none__";
+  for (const set of CATALOG.sets) {
+    const g = set.kind === "country" ? (set.group || null) : "__special__";
+    if (g !== lastGroup) {
+      lastGroup = g;
+      const label = g === "__special__" ? "Special sets" : g ? "Group " + esc(g) : "Ungrouped";
+      html += '<h2 class="section">' + label + '</h2>';
+    }
+    html += render(set);
+  }
+  wrap.innerHTML = html;
 }
 
 const setBlock = (onlyMissing) => (set) => {
@@ -157,6 +204,7 @@ const setBlock = (onlyMissing) => (set) => {
       '<div class="set-head" data-toggle>' +
         '<span class="emoji">'+(set.emoji||"🃏")+'</span>' +
         '<span class="name">'+esc(set.name)+'</span>' +
+        (set.group ? '<span class="pill grp">Grp '+esc(set.group)+'</span>' : '') +
         '<span class="pill">'+set.code+'</span>' +
         '<span class="'+(done?"done":"count")+'">'+have+' / '+set.total+(done?" ✓":"")+'</span>' +
       '</div>' +

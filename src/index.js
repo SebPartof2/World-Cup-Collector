@@ -54,6 +54,7 @@ function computeStats(catalog, owned) {
       code: set.code,
       name: set.name,
       emoji: set.emoji,
+      group: set.group,
       kind: set.kind,
       total: set.total,
       collected: setCollected,
@@ -63,6 +64,31 @@ function computeStats(catalog, owned) {
   }
 
   const countrySets = sets.filter((s) => s.kind === "country");
+
+  // Roll set stats up to the group level (countries only).
+  const groupMap = new Map();
+  for (const s of countrySets) {
+    if (s.group == null) continue;
+    let g = groupMap.get(s.group);
+    if (!g) {
+      g = { group: s.group, countries: 0, total: 0, collected: 0, duplicates: 0, countriesComplete: 0 };
+      groupMap.set(s.group, g);
+    }
+    g.countries++;
+    g.total += s.total;
+    g.collected += s.collected;
+    g.duplicates += s.duplicates;
+    if (s.complete) g.countriesComplete++;
+  }
+  const groups = [...groupMap.values()]
+    .map((g) => ({
+      ...g,
+      missing: g.total - g.collected,
+      percent: g.total ? Math.round((g.collected / g.total) * 1000) / 10 : 0,
+      complete: g.collected === g.total,
+    }))
+    .sort((a, b) => a.group.localeCompare(b.group, undefined, { numeric: true, sensitivity: "base" }));
+
   return {
     totalCards,
     collected,
@@ -73,6 +99,9 @@ function computeStats(catalog, owned) {
     setsTotal: sets.length,
     countriesComplete: countrySets.filter((s) => s.complete).length,
     countriesTotal: countrySets.length,
+    groupsComplete: groups.filter((g) => g.complete).length,
+    groupsTotal: groups.length,
+    groups,
     sets,
   };
 }
@@ -89,6 +118,7 @@ async function handleApi(request, env, path) {
       code: set.code,
       name: set.name,
       emoji: set.emoji,
+      group: set.group,
       kind: set.kind,
       total: set.total,
       cards: set.cards.map((c) => ({ ...c, count: owned.get(c.id) || 0 })),

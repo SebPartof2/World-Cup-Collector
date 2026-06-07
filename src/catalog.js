@@ -35,16 +35,29 @@ function toEmoji(unicode) {
 export function buildCatalog() {
   const sets = [];
 
+  const countrySets = [];
   for (const c of countries) {
     if (!c || !c.code || !c.name) continue;
     const code = String(c.code).toUpperCase();
     const emoji = toEmoji(c.unicode);
+    const group = c.group != null && String(c.group).trim() !== "" ? String(c.group).trim() : null;
     const cards = [];
     for (let n = 1; n <= STICKERS_PER_COUNTRY; n++) {
       cards.push({ id: `${code}${n}`, set: code, number: n, name: `${c.name} #${n}` });
     }
-    sets.push({ code, name: c.name, emoji, kind: "country", total: cards.length, cards });
+    countrySets.push({ code, name: c.name, emoji, group, kind: "country", total: cards.length, cards });
   }
+
+  // Sort countries by group, then alphabetically by name. Ungrouped go last.
+  countrySets.sort((a, b) => {
+    if (a.group !== b.group) {
+      if (a.group == null) return 1;
+      if (b.group == null) return -1;
+      return a.group.localeCompare(b.group, undefined, { numeric: true, sensitivity: "base" });
+    }
+    return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+  });
+  sets.push(...countrySets);
 
   for (const s of SPECIAL_SETS) {
     const code = s.code.toUpperCase();
@@ -52,7 +65,7 @@ export function buildCatalog() {
     for (let n = 1; n <= s.count; n++) {
       cards.push({ id: `${code}${n}`, set: code, number: n, name: `${s.name} #${n}` });
     }
-    sets.push({ code, name: s.name, emoji: s.emoji, kind: "special", total: cards.length, cards });
+    sets.push({ code, name: s.name, emoji: s.emoji, group: null, kind: "special", total: cards.length, cards });
   }
 
   return sets;
