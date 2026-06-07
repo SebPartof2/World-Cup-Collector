@@ -8,8 +8,9 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "db:create": "wrangler d1 create world-cup-collector",
-    "db:init": "wrangler d1 execute world-cup-collector --file=./schema.sql",
-    "db:init:local": "wrangler d1 execute world-cup-collector --local --file=./schema.sql"
+    "db:migrate": "wrangler d1 migrations apply world-cup-collector --remote",
+    "db:migrate:local": "wrangler d1 migrations apply world-cup-collector --local",
+    "db:migrations:list": "wrangler d1 migrations list world-cup-collector --remote"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

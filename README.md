@@ -52,9 +52,9 @@ npm install
 # 1. Create the D1 database, then paste the printed database_id into wrangler.toml
 npm run db:create
 
-# 2. Create the table
-npm run db:init            # remote
-npm run db:init:local      # local dev
+# 2. Apply migrations (creates/updates tables)
+npm run db:migrate         # remote
+npm run db:migrate:local   # local dev
 
 # 3. Run locally
 npm run dev                # http://localhost:8787
@@ -63,8 +63,22 @@ npm run dev                # http://localhost:8787
 npm run deploy
 ```
 
-> The Worker also creates the table on first request (`CREATE TABLE IF NOT
-> EXISTS`), so `db:init` is optional but recommended.
+### Database migrations
+
+Schema changes live in [`migrations/`](migrations/) and are applied with
+Wrangler's D1 migration runner (`npm run db:migrate`). Every migration is
+idempotent (`CREATE TABLE IF NOT EXISTS`), so applying them against a database
+that already has data is safe — existing rows are never dropped or rewritten.
+`wrangler` records which migrations have run in a `d1_migrations` table and only
+applies new ones.
+
+| Migration            | What it does                          |
+| -------------------- | ------------------------------------- |
+| `0001_initial.sql`   | Collection table (`stickers`)         |
+| `0002_add_pages.sql` | Album page numbers table (`pages`)    |
+
+> Belt-and-braces: the Worker also creates any missing tables on first request
+> (also `IF NOT EXISTS`), so the app self-heals even before you run migrations.
 
 ## API
 
@@ -86,6 +100,6 @@ src/index.js          Worker: router, D1 access, stats
 src/catalog.js        Builds the catalog from countries.json + FWC/CC; code parsing
 src/ui.js             Single-page UI (served from the Worker)
 data/countries.json   Country roster (empty — fill it in)
-schema.sql            D1 table definition
+migrations/           D1 schema migrations (stickers, pages)
 wrangler.toml         Worker + D1 binding config
 ```
