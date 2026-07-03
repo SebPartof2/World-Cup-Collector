@@ -136,7 +136,14 @@ let CATALOG = { sets: [] };
 
 async function api(path, opts) {
   const r = await fetch(path, opts);
-  return r.json();
+  let data = null;
+  try { data = await r.json(); } catch {}
+  if (!r.ok) {
+    const msg = (data && data.error) || (r.status + " " + r.statusText);
+    flash(msg, "err");
+    throw new Error(msg);
+  }
+  return data;
 }
 
 function flash(msg, cls) {

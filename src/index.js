@@ -11,22 +11,28 @@ const json = (data, status = 200) =>
 let schemaReady = false;
 async function ensureSchema(db) {
   if (schemaReady) return;
-  await db.batch([
-    db.prepare(
+  // Run each CREATE separately, NOT via db.batch(): batch() wraps its
+  // statements in a transaction, and remote D1 rejects DDL inside a
+  // transaction (it works on local miniflare, which is why this only
+  // surfaced in production). Sequential auto-committed statements are fine.
+  await db
+    .prepare(
       `CREATE TABLE IF NOT EXISTS stickers (
          card_id TEXT PRIMARY KEY,
          count INTEGER NOT NULL DEFAULT 0 CHECK (count >= 0),
          updated_at TEXT NOT NULL
        )`
-    ),
-    db.prepare(
+    )
+    .run();
+  await db
+    .prepare(
       `CREATE TABLE IF NOT EXISTS pages (
          set_code TEXT PRIMARY KEY,
          page TEXT NOT NULL,
          updated_at TEXT NOT NULL
        )`
-    ),
-  ]);
+    )
+    .run();
   schemaReady = true;
 }
 
